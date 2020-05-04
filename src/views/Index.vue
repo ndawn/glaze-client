@@ -1,5 +1,5 @@
 <template lang="pug">
-    section.index
+    section.index-section
         img.bg.bg-left(src="../assets/bg_left.png" alt="")
         img.bg.bg-right(src="../assets/bg_right.png" alt="")
         .container
@@ -44,15 +44,14 @@ export default class Index extends Vue {
 
         const fileInput = <HTMLInputElement> event.target;
 
-        if ((fileInput !== null) && (fileInput.files !== null) && (fileInput.files.length > 0)) {
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
+        if ((fileInput.files !== null) && (fileInput.files.length > 0)) {
             axios.post(
                 '/api/upload/',
-                formData,
+                fileInput.files[0],
                 {
                     headers: {
-                        'Content-Type': 'multipart/form-data'
+                        'Content-Type': 'multipart/form-data',
+                        'Content-Disposition': `form-data; name="file"; filename="${fileInput.files[0].name}"`
                     }
                 }
             ).then((response: AxiosResponse) => {
@@ -74,7 +73,7 @@ export default class Index extends Vue {
 </script>
 
 <style lang="scss" scoped>
-.index {
+.index-section {
     position: relative;
     width: 100%;
     height: 100vh;

@@ -12,8 +12,8 @@ Vue.use(VueRouter)
   },
   {
     path: '/image/:id',
-    name: 'Image',
-    component: () => import(/* webpackChunkName: "about" */ '../views/Image.vue'),
+    name: 'ImageView',
+    component: () => import(/* webpackChunkName: "imageView" */ '../views/ImageView.vue'),
     props: true
   }
 ]
