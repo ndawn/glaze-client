@@ -1,5 +1,5 @@
 <template lang="pug">
-    section.index-section
+    section.index-section(@dragenter.stop="onDragEnter")
         img.bg.bg-left(src="../assets/bg_left.png" alt="")
         img.bg.bg-right(src="../assets/bg_right.png" alt="")
         .container
@@ -14,6 +14,15 @@
                 unicon(name="image-upload" fill="white" style="vertical-align: sub; margin-right: 8px")
                 | Select image
             input.url-input(type="text" placeholder="Paste URL" @paste.prevent="onPaste")
+        .drag-n-drop-overlay(:class="{active: isDragging}")
+            .border-box
+                unicon(name="image-upload" fill="white" width="64px" height="64px")
+                p Drop the image here
+            .drop-box(
+                @dragenter.prevent="onDragEnter"
+                @dragleave.stop="onDragLeave"
+                @drop.prevent="onDrop"
+            )
 </template>
 
 <script lang="ts">
@@ -25,6 +34,8 @@ import axios, {AxiosResponse} from 'axios'
   name: 'Index'
 })
 export default class Index extends Vue {
+    isDragging: boolean = false;
+
     onPaste (event: ClipboardEvent) {
         console.log(event);
 
@@ -60,6 +71,31 @@ export default class Index extends Vue {
         }
     }
 
+    onDragEnter (event: DragEvent) {
+        this.isDragging = true;
+    }
+
+    onDragLeave (event: DragEvent) {
+        this.isDragging = false;
+    }
+
+    onDrop (event: DragEvent) {
+        this.isDragging = false;
+
+        axios.post(
+            '/api/upload/',
+            event.dataTransfer!.files[0],
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    'Content-Disposition': `form-data; name="file"; filename="${event.dataTransfer!.files[0].name}"`
+                }
+            }
+        ).then((response: AxiosResponse) => {
+            this.$router.push(`/image/${response.data.id}`);
+        });
+    }
+
     isValidURL (str: string): boolean {
         const pattern = new RegExp('^(https?:\\/\\/)?' + // protocol
             '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
@@ -68,6 +104,12 @@ export default class Index extends Vue {
             '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
             '(\\#[-a-z\\d_]*)?$','i'); // fragment locator
         return pattern.test(str);
+    }
+
+    beforeMount () {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach((eventName: string) => {
+            window.addEventListener(eventName, (event: Event) => event.preventDefault());
+        })
     }
 }
 </script>
@@ -157,6 +199,44 @@ export default class Index extends Vue {
             border-radius: 0;
             color: #777777;
             background: none;
+        }
+    }
+
+    .drag-n-drop-overlay {
+        display: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.6);
+
+        &.active {
+            display: block;
+        }
+
+        .border-box {
+            display: flex;
+            position: absolute;
+            top: 32px;
+            right: 32px;
+            bottom: 32px;
+            left: 32px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 3px dashed white;
+            border-radius: 16px;
+            color: white;
+        }
+
+        .drop-box {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.1);
         }
     }
 }
